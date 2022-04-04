@@ -12,6 +12,8 @@ from flask_jwt_extended import get_jwt_identity
 
 file_upload = Blueprint('file_upload', __name__)
 
+CONTENT_TYPE_ACCEPTED = ['image/jpeg', 'image/png', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf']
+
 @file_upload.route('/upload', methods=['POST'])
 @jwt_required()
 @token_valid
@@ -23,6 +25,8 @@ def upload(form, user):
         file = File(owner=user.id)
         if form.get('public').lower() == 'true':
             file.public = True
+        if not CONTENT_TYPE_ACCEPTED in request.files["files"].content_type:
+            return jsonify({'msg': 'File type is not allowed'}), 404
         file.name = request.files["files"].filename
         file.fs.put(request.files["files"])
         file.save()
